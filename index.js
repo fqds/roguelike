@@ -10,16 +10,27 @@ function startGame(
   hMin = 3,
   hMax = 8,
   objects = [
-    ["sword", 2],
-    ["heal", 10],
+    ["tileSW", 2],
+    ["tileHP", 50],
   ]
 ) {
-  var map = createMapArray(height, width);
+  let map = createMapArray(height, width);
   map = createRooms(map, roomsMin, roomsMax, wMin, wMax, hMin, hMax);
   map = createTunnels(map, tunnelsMin, tunnelsMax);
   console.log(map);
   map = spawnObjects(map, objects);
   console.log(map);
+  renderMap(map)
+}
+
+function renderMap(map) {
+  let row;
+  for (let y = 0; y < map.length; y++) {
+    row = $('<div>', {class: "row"}).appendTo('.field')
+    for (let x = 0; x < map[0].length; x++) {
+      $('<div>', {class: "tile "+map[y][x]}).appendTo(row)
+    }
+  }
 }
 
 function createMapArray(height, width) {
@@ -27,7 +38,7 @@ function createMapArray(height, width) {
   for (let i = 0; i < height; i++) {
     arr.push([]);
     for (let j = 0; j < width; j++) {
-      arr[i].push("w"); // w == wall
+      arr[i].push("tileW"); // wall
     }
   }
   return arr;
@@ -48,7 +59,7 @@ function createRoom(map, wMin, wMax, hMin, hMax) {
   const roomX = Math.floor(Math.random() * (map[0].length - roomWidth));
   for (let y = roomY; y < roomY + roomHeight; y++) {
     for (let x = roomX; x < roomX + roomWidth; x++) {
-      map[y][x] = "e"; // e == empty
+      map[y][x] = ""; // empty
     }
   }
   return map;
@@ -72,12 +83,12 @@ function createTunnel(map, is_horizontal) {
   if (is_horizontal) {
     const y = Math.floor(Math.random() * map.length);
     for (let x = 0; x < map[0].length; x++) {
-      map[y][x] = "e";
+      map[y][x] = "";
     }
   } else {
     const x = Math.floor(Math.random() * map[0].length);
     for (let y = 0; y < map.length; y++) {
-      map[y][x] = "e";
+      map[y][x] = "";
     }
   }
   return map;
@@ -86,10 +97,11 @@ function createTunnel(map, is_horizontal) {
 function getEmptySpace(map) {
   let emptySpaceArray = [];
   let emptySpaceTotal = 0;
+  console.log(map)
   for (let y = 0; y < map.length; y++) {
     emptySpaceArray.push(0);
     for (let x = 0; x < map[0].length; x++) {
-      if (map[y][x] === "e") {
+      if (map[y][x] === "") {
         emptySpaceTotal += 1;
         emptySpaceArray[y] += 1;
       }
@@ -101,7 +113,7 @@ function getEmptySpace(map) {
 function spawnObjects(map, objects) {
   for (let object_id = 0; object_id < objects.length; object_id++) {
     for (let i = 0; i < objects[object_id][1]; i++) {
-      console.log(object_id, i, objects[object_id][1]);
+      console.log(map);
       map = spawnObject(map, objects[object_id][0]);
     }
   }
@@ -109,13 +121,16 @@ function spawnObjects(map, objects) {
 }
 
 function spawnObject(map, object) {
+  console.log(map)
   const emptySpace = getEmptySpace(map);
   let objectCoord = getSpawnCoord(emptySpace);
-  console.log(object, objectCoord);
   for (let i = map[0].length - 1; i >= 0; i--) {
-    if (map[objectCoord[0]][i] === "e") {
+    console.log(objectCoord[0], i,objectCoord[1])
+    if (map[objectCoord[0]][i] === "") {
+      console.log('trueee', objectCoord[0], i,objectCoord[1])
       if (objectCoord[1] === 0) {
         map[objectCoord[0]][i] = object;
+        console.log(object,'created', objectCoord[0], objectCoord[1], i,emptySpace ,map)
         return map;
       }
       objectCoord[1] += 1;
@@ -124,7 +139,7 @@ function spawnObject(map, object) {
 }
 
 function getSpawnCoord(emptySpace) {
-  let emptySpaceCoord = Math.floor(Math.random() * emptySpace[1]);
+  let emptySpaceCoord = Math.floor(Math.random() * emptySpace[1]) + 1;
   for (let i = 0; i < emptySpace[0].length; i++) {
     emptySpaceCoord -= emptySpace[0][i];
     if (emptySpaceCoord <= 0) {
