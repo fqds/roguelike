@@ -11,15 +11,13 @@ function startGame(
   hMax = 8,
   objects = [
     ["tileSW", 2],
-    ["tileHP", 50],
+    ["tileHP", 10],
   ]
 ) {
   let map = createMapArray(height, width);
   map = createRooms(map, roomsMin, roomsMax, wMin, wMax, hMin, hMax);
   map = createTunnels(map, tunnelsMin, tunnelsMax);
-  console.log(map);
   map = spawnObjects(map, objects);
-  console.log(map);
   renderMap(map)
 }
 
@@ -45,7 +43,7 @@ function createMapArray(height, width) {
 }
 
 function createRooms(map, roomsMin, roomsMax, wMin, wMax, hMin, hMax) {
-  const roomsAmount = Math.floor(Math.random() * (roomsMax - roomsMin)) + 1;
+  const roomsAmount = Math.floor(Math.random() * (roomsMax - roomsMin + 1)) + roomsMin;
   for (let i = 0; i < roomsAmount; i++) {
     map = createRoom(map, wMin, wMax, hMin, hMax);
   }
@@ -53,8 +51,8 @@ function createRooms(map, roomsMin, roomsMax, wMin, wMax, hMin, hMax) {
 }
 
 function createRoom(map, wMin, wMax, hMin, hMax) {
-  const roomHeight = Math.floor(Math.random() * (hMax - hMin)) + hMin + 1;
-  const roomWidth = Math.floor(Math.random() * (wMax - wMin)) + wMin + 1;
+  const roomHeight = Math.floor(Math.random() * (hMax - hMin + 1)) + hMin;
+  const roomWidth = Math.floor(Math.random() * (wMax - wMin + 1)) + wMin;
   const roomY = Math.floor(Math.random() * (map.length - roomHeight));
   const roomX = Math.floor(Math.random() * (map[0].length - roomWidth));
   for (let y = roomY; y < roomY + roomHeight; y++) {
@@ -97,7 +95,6 @@ function createTunnel(map, is_horizontal) {
 function getEmptySpace(map) {
   let emptySpaceArray = [];
   let emptySpaceTotal = 0;
-  console.log(map)
   for (let y = 0; y < map.length; y++) {
     emptySpaceArray.push(0);
     for (let x = 0; x < map[0].length; x++) {
@@ -111,42 +108,45 @@ function getEmptySpace(map) {
 }
 
 function spawnObjects(map, objects) {
+  let emptySpace = getEmptySpace(map);
   for (let object_id = 0; object_id < objects.length; object_id++) {
     for (let i = 0; i < objects[object_id][1]; i++) {
-      console.log(map);
-      map = spawnObject(map, objects[object_id][0]);
+      map, emptySpace = spawnObject(map, objects[object_id][0], emptySpace);
     }
   }
   return map;
 }
 
-function spawnObject(map, object) {
-  console.log(map)
-  const emptySpace = getEmptySpace(map);
-  let objectCoord = getSpawnCoord(emptySpace);
+function spawnObject(map, object, emptySpace) {
+  const objectCoord = getSpawnCoord(map, emptySpace);
+  map[objectCoord[0]][objectCoord[1]] = object;
+  return map, objectCoord[2];
+}
+
+function getSpawnCoord(map, emptySpace) {
+  let emptySpaceCoord = Math.floor(Math.random() * emptySpace[1]) + 1;
+  for (let i = 0; i < emptySpace[0].length; i++) {
+    emptySpaceCoord -= emptySpace[0][i];
+    if (emptySpaceCoord <= 0) {
+      var objectCoord = [i, emptySpaceCoord];
+      break;
+    }
+  }
   for (let i = map[0].length - 1; i >= 0; i--) {
-    console.log(objectCoord[0], i,objectCoord[1])
     if (map[objectCoord[0]][i] === "") {
-      console.log('trueee', objectCoord[0], i,objectCoord[1])
       if (objectCoord[1] === 0) {
-        map[objectCoord[0]][i] = object;
-        console.log(object,'created', objectCoord[0], objectCoord[1], i,emptySpace ,map)
-        return map;
+        emptySpace[1] -= 1
+        emptySpace[0][objectCoord[0]] -= 1
+        return [objectCoord[0], i, emptySpace];
       }
       objectCoord[1] += 1;
     }
   }
 }
 
-function getSpawnCoord(emptySpace) {
-  let emptySpaceCoord = Math.floor(Math.random() * emptySpace[1]) + 1;
-  for (let i = 0; i < emptySpace[0].length; i++) {
-    emptySpaceCoord -= emptySpace[0][i];
-    if (emptySpaceCoord <= 0) {
-      return [i, emptySpaceCoord];
-    }
-  }
-}
+// function spawnHero(map, emptySpace) {
+// const objectCoord = getSpawnCoord(map, emptySpace);
+// }
 
 $(function () {
   startGame(20, 32);
