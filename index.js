@@ -12,21 +12,26 @@ function startGame(
   objects = [
     ["tileSW", 2],
     ["tileHP", 10],
-  ]
+  ],
+  object_parameters = {
+    tileSW: ["increaceHeroDamage", { modifier: 1 }],
+    tileHP: ["healHero", {}],
+  }
 ) {
   let map = createMapArray(height, width);
   map = createRooms(map, roomsMin, roomsMax, wMin, wMax, hMin, hMax);
   map = createTunnels(map, tunnelsMin, tunnelsMax);
   map = spawnObjects(map, objects);
-  renderMap(map)
+  renderMap(map);
+  spawnHero(map, object_parameters);
 }
 
 function renderMap(map) {
   let row;
   for (let y = 0; y < map.length; y++) {
-    row = $('<div>', {class: "row"}).appendTo('.field')
+    row = $("<div>", { class: "row" }).appendTo(".field");
     for (let x = 0; x < map[0].length; x++) {
-      $('<div>', {class: "tile "+map[y][x]}).appendTo(row)
+      $("<div>", { class: "tile " + map[y][x] }).appendTo(row);
     }
   }
 }
@@ -43,7 +48,8 @@ function createMapArray(height, width) {
 }
 
 function createRooms(map, roomsMin, roomsMax, wMin, wMax, hMin, hMax) {
-  const roomsAmount = Math.floor(Math.random() * (roomsMax - roomsMin + 1)) + roomsMin;
+  const roomsAmount =
+    Math.floor(Math.random() * (roomsMax - roomsMin + 1)) + roomsMin;
   for (let i = 0; i < roomsAmount; i++) {
     map = createRoom(map, wMin, wMax, hMin, hMax);
   }
@@ -111,14 +117,14 @@ function spawnObjects(map, objects) {
   let emptySpace = getEmptySpace(map);
   for (let object_id = 0; object_id < objects.length; object_id++) {
     for (let i = 0; i < objects[object_id][1]; i++) {
-      map, emptySpace = spawnObject(map, objects[object_id][0], emptySpace);
+      var objectCoord = getSpawnCoord(map, emptySpace);
+      map, (emptySpace = spawnObject(map, objects[object_id][0], objectCoord));
     }
   }
   return map;
 }
 
-function spawnObject(map, object, emptySpace) {
-  const objectCoord = getSpawnCoord(map, emptySpace);
+function spawnObject(map, object, objectCoord) {
   map[objectCoord[0]][objectCoord[1]] = object;
   return map, objectCoord[2];
 }
@@ -135,8 +141,8 @@ function getSpawnCoord(map, emptySpace) {
   for (let i = map[0].length - 1; i >= 0; i--) {
     if (map[objectCoord[0]][i] === "") {
       if (objectCoord[1] === 0) {
-        emptySpace[1] -= 1
-        emptySpace[0][objectCoord[0]] -= 1
+        emptySpace[1] -= 1;
+        emptySpace[0][objectCoord[0]] -= 1;
         return [objectCoord[0], i, emptySpace];
       }
       objectCoord[1] += 1;
@@ -144,10 +150,81 @@ function getSpawnCoord(map, emptySpace) {
   }
 }
 
-// function spawnHero(map, emptySpace) {
-// const objectCoord = getSpawnCoord(map, emptySpace);
-// }
+function increaceHeroDamage(content) {
+  heroParameters["damage"] += content["modifier"];
+}
 
+function healHero(content) {
+  heroParameters["hp"] = heroParameters["maxhp"];
+}
+
+function spawnHero(map, object_parameters) {
+  var emptySpace = getEmptySpace(map);
+  var heroCoord = getSpawnCoord(map, emptySpace);
+  $(".field")
+    .children()
+    .eq(heroCoord[0])
+    .children()
+    .eq(heroCoord[1])
+    .addClass("tileP");
+  // направление движения x, y и переменная, показывающая состояние кнопки
+  var keys = {
+    KeyW: [-1, 0, false],
+    KeyA: [0, -1, false],
+    KeyS: [1, 0, false],
+    KeyD: [0, 1, false],
+  };
+  document.onkeydown = function (e) {
+    if (keys[e.code] && keys[e.code][2] === false) {
+      keys[e.code][2] = true;
+      // первые 4 условия проверяют не выходит ли игрок за конец карты, последняя не идет ли он в стену
+      if (
+        heroCoord[0] + keys[e.code][0] >= 0 &&
+        heroCoord[0] + keys[e.code][0] < map.length &&
+        heroCoord[1] + keys[e.code][1] >= 0 &&
+        heroCoord[1] + keys[e.code][1] < map[0].length &&
+        map[heroCoord[0] + keys[e.code][0]][heroCoord[1] + keys[e.code][1]] !=
+          "tileW"
+      ) {
+        heroCoord = [
+          heroCoord[0] + keys[e.code][0],
+          heroCoord[1] + keys[e.code][1],
+        ];
+
+        // двигаем игрока моделько игрока
+        $(".tileP").removeClass("tileP");
+        $(".field")
+          .children()
+          .eq(heroCoord[0])
+          .children()
+          .eq(heroCoord[1])
+          .addClass("tileP");
+
+        // если в клетке игрока есть предмет, используем его
+        if (map[heroCoord[0]][heroCoord[1]] != "") {
+          window[object_parameters[map[heroCoord[0]][heroCoord[1]]][0]](
+            object_parameters[map[heroCoord[0]][heroCoord[1]]][1]
+          );
+          $(".field")
+            .children()
+            .eq(heroCoord[0])
+            .children()
+            .eq(heroCoord[1])
+            .removeClass(map[heroCoord[0]][heroCoord[1]]);
+          map[heroCoord[0]][heroCoord[1]] = "";
+        }
+        console.log(keys[e.code], heroCoord, heroParameters);
+      }
+    }
+  };
+  document.onkeyup = function (e) {
+    if (keys[e.code] && keys[e.code][2] === true) {
+      keys[e.code][2] = false;
+    }
+  };
+}
+
+var heroParameters = { damage: 2, hp: 100, maxhp: 100 };
 $(function () {
   startGame(20, 32);
 });
