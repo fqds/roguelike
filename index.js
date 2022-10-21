@@ -4,7 +4,7 @@ function startGame(
   tunnelsMin = 3,
   tunnelsMax = 5,
   roomsMin = 5,
-  roomsMax = 10,
+  roomsMax = 5,
   wMin = 3,
   wMax = 8,
   hMin = 3,
@@ -13,9 +13,13 @@ function startGame(
     ["tileSW", 2],
     ["tileHP", 10],
   ],
-  object_parameters = {
-    tileSW: ["increaceHeroDamage", { modifier: 1 }],
-    tileHP: ["healHero", {}],
+  objectParameters = {
+    tileSW: ["increacePlayerDamage", { modifier: 15 }],
+    tileHP: ["healPlayer", {}],
+  },
+  enemies = [["tileE", 10]],
+  enemyParameters = {
+    tileE: { damage: 10, hp: 50, maxhp: 50, weaponrange: 1, visionrange: 5, name: "tileE"},
   }
 ) {
   let map = createMapArray(height, width);
@@ -23,7 +27,8 @@ function startGame(
   map = createTunnels(map, tunnelsMin, tunnelsMax);
   map = spawnObjects(map, objects);
   renderMap(map);
-  spawnHero(map, object_parameters);
+  spawnPlayer(map, objectParameters, enemyParameters);
+  spawnEnemies(map, enemies, enemyParameters);
 }
 
 function renderMap(map) {
@@ -98,6 +103,7 @@ function createTunnel(map, is_horizontal) {
   return map;
 }
 
+// выводит кол-во свободных координат
 function getEmptySpace(map) {
   let emptySpaceArray = [];
   let emptySpaceTotal = 0;
@@ -118,17 +124,14 @@ function spawnObjects(map, objects) {
   for (let object_id = 0; object_id < objects.length; object_id++) {
     for (let i = 0; i < objects[object_id][1]; i++) {
       var objectCoord = getSpawnCoord(map, emptySpace);
-      map, (emptySpace = spawnObject(map, objects[object_id][0], objectCoord));
+      map[objectCoord[0]][objectCoord[1]] = objects[object_id][0];
+      emptySpace = objectCoord[2];
     }
   }
   return map;
 }
 
-function spawnObject(map, object, objectCoord) {
-  map[objectCoord[0]][objectCoord[1]] = object;
-  return map, objectCoord[2];
-}
-
+// выводит рандомную не занятую координату
 function getSpawnCoord(map, emptySpace) {
   let emptySpaceCoord = Math.floor(Math.random() * emptySpace[1]) + 1;
   for (let i = 0; i < emptySpace[0].length; i++) {
@@ -136,6 +139,7 @@ function getSpawnCoord(map, emptySpace) {
     if (emptySpaceCoord <= 0) {
       var objectCoord = [i, emptySpaceCoord];
       break;
+      z;
     }
   }
   for (let i = map[0].length - 1; i >= 0; i--) {
@@ -150,22 +154,23 @@ function getSpawnCoord(map, emptySpace) {
   }
 }
 
-function increaceHeroDamage(content) {
-  heroParameters["damage"] += content["modifier"];
+// функции предметов
+function increacePlayerDamage(content) {
+  playerParameters["damage"] += content["modifier"];
 }
 
-function healHero(content) {
-  heroParameters["hp"] = heroParameters["maxhp"];
+function healPlayer(content) {
+  playerParameters["hp"] = playerParameters["maxhp"];
 }
 
-function spawnHero(map, object_parameters) {
+function spawnPlayer(map, objectParameters, enemyParameters) {
   var emptySpace = getEmptySpace(map);
-  var heroCoord = getSpawnCoord(map, emptySpace);
+  playerCoord = getSpawnCoord(map, emptySpace);
   $(".field")
     .children()
-    .eq(heroCoord[0])
+    .eq(playerCoord[0])
     .children()
-    .eq(heroCoord[1])
+    .eq(playerCoord[1])
     .addClass("tileP");
   // направление движения x, y и переменная, показывающая состояние кнопки
   var keys = {
@@ -179,41 +184,45 @@ function spawnHero(map, object_parameters) {
       keys[e.code][2] = true;
       // первые 4 условия проверяют не выходит ли игрок за конец карты, последняя не идет ли он в стену
       if (
-        heroCoord[0] + keys[e.code][0] >= 0 &&
-        heroCoord[0] + keys[e.code][0] < map.length &&
-        heroCoord[1] + keys[e.code][1] >= 0 &&
-        heroCoord[1] + keys[e.code][1] < map[0].length &&
-        map[heroCoord[0] + keys[e.code][0]][heroCoord[1] + keys[e.code][1]] !=
-          "tileW"
+        playerCoord[0] + keys[e.code][0] >= 0 &&
+        playerCoord[0] + keys[e.code][0] < map.length &&
+        playerCoord[1] + keys[e.code][1] >= 0 &&
+        playerCoord[1] + keys[e.code][1] < map[0].length &&
+        map[playerCoord[0] + keys[e.code][0]][
+          playerCoord[1] + keys[e.code][1]
+        ] != "tileW" &&
+        !(enemyParameters[
+          map[playerCoord[0] + keys[e.code][0]][
+            playerCoord[1] + keys[e.code][1]
+          ]
+        ])
       ) {
-        heroCoord = [
-          heroCoord[0] + keys[e.code][0],
-          heroCoord[1] + keys[e.code][1],
+        playerCoord = [
+          playerCoord[0] + keys[e.code][0],
+          playerCoord[1] + keys[e.code][1],
         ];
 
-        // двигаем игрока моделько игрока
+        // двигаем модельку игрока
         $(".tileP").removeClass("tileP");
         $(".field")
           .children()
-          .eq(heroCoord[0])
+          .eq(playerCoord[0])
           .children()
-          .eq(heroCoord[1])
+          .eq(playerCoord[1])
           .addClass("tileP");
 
         // если в клетке игрока есть предмет, используем его
-        if (map[heroCoord[0]][heroCoord[1]] != "") {
-          window[object_parameters[map[heroCoord[0]][heroCoord[1]]][0]](
-            object_parameters[map[heroCoord[0]][heroCoord[1]]][1]
-          );
+        if (objectParameters[map[playerCoord[0]][playerCoord[1]]]) {
+          pickUpItem(objectParameters[map[playerCoord[0]][playerCoord[1]]]);
           $(".field")
             .children()
-            .eq(heroCoord[0])
+            .eq(playerCoord[0])
             .children()
-            .eq(heroCoord[1])
-            .removeClass(map[heroCoord[0]][heroCoord[1]]);
-          map[heroCoord[0]][heroCoord[1]] = "";
+            .eq(playerCoord[1])
+            .removeClass(map[playerCoord[0]][playerCoord[1]]);
+          map[playerCoord[0]][playerCoord[1]] = "";
         }
-        console.log(keys[e.code], heroCoord, heroParameters);
+        console.log(keys[e.code], playerCoord, playerParameters);
       }
     }
   };
@@ -224,7 +233,104 @@ function spawnHero(map, object_parameters) {
   };
 }
 
-var heroParameters = { damage: 2, hp: 100, maxhp: 100 };
+function useItem(item) {
+  window[item[0]](item[1]);
+}
+
+function pickUpItem(item) {
+  useItem(item);
+}
+
+function spawnEnemies(map, enemies, enemyParameters) {
+  for (let enemy = 0; enemy < enemies.length; enemy++) {
+    for (let i = 0; i < enemies[enemy][1]; i++) { 
+      spawnEnemy(
+        map,
+        enemyParameters[enemies[enemy][0]],
+        Object.keys(enemyArray).length
+      );
+    }
+  }
+}
+
+function spawnEnemy(map, enemyParameters, enemyId) {
+  var emptySpace = getEmptySpace(map);
+  var enemyCoord = getSpawnCoord(map, emptySpace);
+  $(".field")
+    .children()
+    .eq(enemyCoord[0])
+    .children()
+    .eq(enemyCoord[1])
+    .addClass(enemyParameters["name"]);
+  enemyArray[enemyId] = {};
+  enemyArray[enemyId]["y"] = enemyCoord[0];
+  enemyArray[enemyId]["x"] = enemyCoord[1];
+  map[enemyCoord[0]][enemyCoord[1]] = enemyParameters["name"]
+  for (var key in enemyParameters) {
+    enemyArray[enemyId][key] = enemyParameters[key];
+  }
+  enemyAction(map, enemyId);
+}
+
+function enemyAction(map, enemyId) {
+  let enemy = enemyArray[enemyId];
+  if (
+    Math.abs(enemy["y"] - playerCoord[0]) <= enemy["visionrange"] &&
+    Math.abs(enemy["x"] - playerCoord[1]) <= enemy["visionrange"]
+  ) {
+    console.log("enemy detected you");
+    setTimeout(() => {
+      enemyAction(map, enemyId);
+    }, 100);
+  } else {
+    const directons = [
+      [-1, 0],
+      [0, -1],
+      [1, 0],
+      [0, 1],
+    ];
+    let availableDirections = [];
+    for (let i = 0; i < 4; i++) {
+      if (
+        enemy["y"] + directons[i][0] >= 0 &&
+        enemy["y"] + directons[i][0] < map.length &&
+        enemy["x"] + directons[i][1] >= 0 &&
+        enemy["x"] + directons[i][1] < map[0].length &&
+        map[enemy["y"] + directons[i][0]][enemy["x"] + directons[i][1]] === ""
+      ) {
+        availableDirections.push(directons[i]);
+      }
+    }
+    const direction =
+      availableDirections[
+        Math.floor(Math.random() * availableDirections.length)
+      ];
+    if (direction) {
+      $(".field")
+        .children()
+        .eq(enemy["y"])
+        .children()
+        .eq(enemy["x"])
+        .removeClass(enemy["name"]);
+      map[enemy["y"]][enemy["x"]] = ""
+      enemy["y"] += direction[0];
+      enemy["x"] += direction[1];
+      map[enemy["y"]][enemy["x"]] = enemy["name"]
+      $(".field")
+        .children()
+        .eq(enemy["y"])
+        .children()
+        .eq(enemy["x"])
+        .addClass(enemy["name"]);
+    }
+    setTimeout(() => {
+      enemyAction(map, enemyId);
+    }, 2000);
+  }
+}
+var playerCoord = [];
+var enemyArray = {};
+var playerParameters = { damage: 20, hp: 100, maxhp: 100 };
 $(function () {
   startGame(20, 32);
 });
