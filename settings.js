@@ -13,8 +13,7 @@ const settings = {
     ["tileSW", 2],
     ["tileHP", 10],
   ],
-  enemies: [["tileE", 10]],
-  playerBaseParameters: { damage: 20, hp: 50, maxhp: 100 },
+  playerBaseParameters: { damage: 20, hp: 50, maxhp: 100, weaponrange: 1 },
   objectParameters: {
     tileSW: function (playerParameters) {
       playerParameters.damage += 15;
@@ -26,9 +25,9 @@ const settings = {
   enemies: [["tileE", 10]],
   enemyParameters: {
     tileE: {
-      damage: 10,
-      hp: 50,
-      maxhp: 50,
+      damage: 30,
+      hp: 200,
+      maxhp: 250,
       weaponrange: 1,
       visionrange: 5,
       name: "tileE",

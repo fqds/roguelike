@@ -1,49 +1,55 @@
 import { settings } from "./settings.js";
-import { getSpawnCoord } from "./mixins.js";
+import { playerCoord, enemyArray, map } from "./index.js";
+import { getSpawnCoord, clearTile, drawTile } from "./mixins.js";
 
-function spawnEnemies(map, enemyArray, playerCoord) {
+function spawnEnemies() {
   for (let enemy = 0; enemy < settings.enemies.length; enemy++) {
     for (let i = 0; i < settings.enemies[enemy][1]; i++) {
       spawnEnemy(
-        map,
-        settings.enemyParameters[settings.enemies[enemy][0]],
-        Object.keys(enemyArray).length,
-        enemyArray,
-        playerCoord
+        settings.enemyParameters[settings.enemies[enemy][0]]
       );
     }
   }
 }
 
-function spawnEnemy(map, enemyParameters, enemyId, enemyArray, playerCoord) {
+function spawnEnemy(enemyParameters) {
+  const enemyId = Object.keys(enemyArray).length;
   var enemyCoord = getSpawnCoord(map);
-  $(".field")
-    .children()
-    .eq(enemyCoord[0])
-    .children()
-    .eq(enemyCoord[1])
-    .addClass(enemyParameters["name"]);
+  drawTile(enemyCoord[0], enemyCoord[1], enemyParameters.name);
   enemyArray[enemyId] = {};
   enemyArray[enemyId]["y"] = enemyCoord[0];
   enemyArray[enemyId]["x"] = enemyCoord[1];
-  map[enemyCoord[0]][enemyCoord[1]] = enemyParameters["name"];
+  enemyArray[enemyId]["getDamage"] = function (damage) {
+    this.hp -= damage;
+    if (this.hp <= 0) {
+      clearTile(this.y, this.x, this.name);
+      this.y = -100;
+      this.x = -100;
+    }
+  };
   for (var key in enemyParameters) {
     enemyArray[enemyId][key] = enemyParameters[key];
   }
-  enemyAction(map, enemyId, enemyArray, playerCoord);
+  enemyAction(enemyId);
 }
 
-function enemyAction(map, enemyId, enemyArray, playerCoord) {
+function enemyAction(enemyId) {
   let enemy = enemyArray[enemyId];
-  if (
+  // рекурсия заканчивается после смерти врага
+  if (enemy.hp <= 0) {
+    console.log("enemy died");
+  }
+  // если игрок в области зрения выполняется эта функция
+  else if (
     Math.abs(enemy["y"] - playerCoord[0]) <= enemy["visionrange"] &&
     Math.abs(enemy["x"] - playerCoord[1]) <= enemy["visionrange"]
   ) {
-    console.log("enemy detected player! player coord is " + playerCoord);
     setTimeout(() => {
-      enemyAction(map, enemyId, enemyArray, playerCoord);
+      enemyAction(enemyId);
     }, 100);
-  } else {
+  }
+  // если предыдущие условия не выполнены, враг просто передвигается в рандомном направлении на 1 клетку
+  else {
     const directons = [
       [-1, 0],
       [0, -1],
@@ -67,26 +73,14 @@ function enemyAction(map, enemyId, enemyArray, playerCoord) {
         Math.floor(Math.random() * availableDirections.length)
       ];
     if (direction) {
-      $(".field")
-        .children()
-        .eq(enemy["y"])
-        .children()
-        .eq(enemy["x"])
-        .removeClass(enemy["name"]);
-      map[enemy["y"]][enemy["x"]] = "";
+      clearTile(enemy.y, enemy.x, enemy.name);
       enemy["y"] += direction[0];
       enemy["x"] += direction[1];
-      map[enemy["y"]][enemy["x"]] = enemy["name"];
-      $(".field")
-        .children()
-        .eq(enemy["y"])
-        .children()
-        .eq(enemy["x"])
-        .addClass(enemy["name"]);
+      drawTile(enemy.y, enemy.x, enemy.name);
     }
     setTimeout(() => {
-      enemyAction(map, enemyId, enemyArray, playerCoord);
-    }, 2000);
+      enemyAction(enemyId);
+    }, 500);
   }
 }
 

@@ -1,3 +1,5 @@
+import { map } from "./index.js";
+
 // выводит рандомную не занятую координату
 function getSpawnCoord(map) {
   var emptySpace = getEmptySpace(map);
@@ -35,4 +37,14 @@ function getEmptySpace(map) {
   return [emptySpaceArray, emptySpaceTotal];
 }
 
-export { getSpawnCoord };
+function clearTile(y, x, name) {
+  $(".field").children().eq(y).children().eq(x).removeClass(name);
+  map[y][x] = "";
+}
+
+function drawTile(y, x, name) {
+  $(".field").children().eq(y).children().eq(x).addClass(name);
+  map[y][x] = name;
+}
+
+export { getSpawnCoord, clearTile, drawTile };

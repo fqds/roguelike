@@ -5,8 +5,8 @@ import { getSpawnCoord } from "./mixins.js";
 
 function startGame() {
   renderMap(map);
-  spawnPlayer(map, playerParameters);
-  spawnEnemies(map, enemyArray, playerCoord);
+  spawnEnemies();
+  spawnPlayer();
 }
 
 function renderMap(map) {
@@ -21,10 +21,9 @@ function renderMap(map) {
 
 var map = generateMap();
 var playerCoord = getSpawnCoord(map);
-var playerParameters = {};
 var enemyArray = {};
 $(function () {
   startGame(20, 32);
 });
 
-export { playerCoord };
+export { playerCoord, enemyArray, map };
