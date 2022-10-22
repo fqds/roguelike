@@ -47,4 +47,16 @@ function drawTile(y, x, name) {
   map[y][x] = name;
 }
 
-export { getSpawnCoord, clearTile, drawTile };
+function isPossibleDirection(coord, direction) {
+  if (
+    coord[0] + direction[0] >= 0 &&
+    coord[0] + direction[0] < map.length &&
+    coord[1] + direction[1] >= 0 &&
+    coord[1] + direction[1] < map[0].length
+  ) {
+    return true;
+  }
+  return false;
+}
+
+export { getSpawnCoord, clearTile, drawTile, isPossibleDirection };

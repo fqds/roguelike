@@ -1,6 +1,6 @@
 import { settings } from "./settings.js";
 import { playerCoord, enemyArray, map } from "./index.js";
-import { clearTile } from "./mixins.js";
+import { clearTile, isPossibleDirection } from "./mixins.js";
 
 function spawnPlayer() {
   var playerParameters = {};
@@ -29,10 +29,7 @@ function spawnPlayer() {
     if (keys[e.code] && keys[e.code][2] === false) {
       keys[e.code][2] = true;
       if (
-        playerCoord[0] + keys[e.code][0] >= 0 &&
-        playerCoord[0] + keys[e.code][0] < map.length &&
-        playerCoord[1] + keys[e.code][1] >= 0 &&
-        playerCoord[1] + keys[e.code][1] < map[0].length &&
+        isPossibleDirection(playerCoord, keys[e.code]) &&
         map[playerCoord[0] + keys[e.code][0]][
           playerCoord[1] + keys[e.code][1]
         ] != "tileW" &&
@@ -42,7 +39,7 @@ function spawnPlayer() {
           ]
         ]
       ) {
-        movePlayer(playerCoord, keys[e.code])
+        movePlayer(playerCoord, keys[e.code]);
         // если в клетке игрока есть предмет, используем его
         if (settings.objectParameters[map[playerCoord[0]][playerCoord[1]]]) {
           useItem(

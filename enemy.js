@@ -1,6 +1,6 @@
 import { settings } from "./settings.js";
 import { playerCoord, enemyArray, map } from "./index.js";
-import { getSpawnCoord, clearTile, drawTile } from "./mixins.js";
+import { getSpawnCoord, clearTile, drawTile, isPossibleDirection } from "./mixins.js";
 
 function spawnEnemies() {
   for (let enemy = 0; enemy < settings.enemies.length; enemy++) {
@@ -58,11 +58,7 @@ function enemyAction(enemyId) {
     ];
     let availableDirections = [];
     for (let i = 0; i < 4; i++) {
-      if (
-        enemy["y"] + directons[i][0] >= 0 &&
-        enemy["y"] + directons[i][0] < map.length &&
-        enemy["x"] + directons[i][1] >= 0 &&
-        enemy["x"] + directons[i][1] < map[0].length &&
+      if (isPossibleDirection([enemy["y"], enemy["x"]], directons[i]) &&
         map[enemy["y"] + directons[i][0]][enemy["x"] + directons[i][1]] === ""
       ) {
         availableDirections.push(directons[i]);
