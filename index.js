@@ -22,8 +22,9 @@ function renderMap(map) {
 var map = generateMap();
 var playerCoord = getSpawnCoord(map);
 var enemyArray = {};
+var playerParameters = {};
 $(function () {
   startGame(20, 32);
 });
 
-export { playerCoord, enemyArray, map };
+export { playerCoord, enemyArray, map, playerParameters };

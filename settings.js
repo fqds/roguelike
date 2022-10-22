@@ -29,7 +29,7 @@ const settings = {
       hp: 200,
       maxhp: 250,
       weaponrange: 1,
-      visionrange: 5,
+      visionrange: 8,
       name: "tileE",
     },
   },

@@ -1,9 +1,8 @@
 import { settings } from "./settings.js";
-import { playerCoord, enemyArray, map } from "./index.js";
+import { playerCoord, enemyArray, map, playerParameters } from "./index.js";
 import { clearTile, isPossibleDirection } from "./mixins.js";
 
 function spawnPlayer() {
-  var playerParameters = {};
   for (var key in settings.playerBaseParameters) {
     playerParameters[key] = settings.playerBaseParameters[key];
   }
@@ -24,7 +23,7 @@ function spawnPlayer() {
   document.onkeydown = function (e) {
     if (!space[e.code]) {
       space[e.code] = true;
-      attackEnemiesAround(playerParameters);
+      attackEnemiesAround();
     }
     if (keys[e.code] && keys[e.code][2] === false) {
       keys[e.code][2] = true;
@@ -43,8 +42,7 @@ function spawnPlayer() {
         // если в клетке игрока есть предмет, используем его
         if (settings.objectParameters[map[playerCoord[0]][playerCoord[1]]]) {
           useItem(
-            settings.objectParameters[map[playerCoord[0]][playerCoord[1]]],
-            playerParameters
+            settings.objectParameters[map[playerCoord[0]][playerCoord[1]]]
           );
 
           clearTile(
@@ -79,7 +77,7 @@ function movePlayer(playerCoord, direction) {
     .addClass("tileP");
 }
 
-function attackEnemiesAround(playerParameters) {
+function attackEnemiesAround() {
   for (
     let y = -playerParameters.weaponrange + playerCoord[0];
     y <= playerParameters.weaponrange + playerCoord[0];
@@ -104,7 +102,7 @@ function attackEnemiesAround(playerParameters) {
   }
 }
 
-function useItem(item, playerParameters) {
+function useItem(item) {
   item(playerParameters);
 }
 
