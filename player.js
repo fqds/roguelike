@@ -6,6 +6,13 @@ function spawnPlayer() {
   for (var key in settings.playerBaseParameters) {
     playerParameters[key] = settings.playerBaseParameters[key];
   }
+  playerParameters["getDamage"] = function (damage) {
+    this.hp -= damage;
+    console.log(playerParameters.hp);
+    if (this.hp <= 0) {
+      gameOver();
+    }
+  };
   $(".field")
     .children()
     .eq(playerCoord[0])
@@ -100,6 +107,18 @@ function attackEnemiesAround() {
       } catch {}
     }
   }
+}
+
+function gameOver() {
+  playerCoord[0] = -200;
+  playerCoord[1] = -200;
+  $(".tileP").removeClass("tileP");
+  $("<div>", { class: "game-over-menu" }).appendTo("body");
+  $("<div>", {
+    class: "game-over-menu-content",
+    text: "RESTART",
+    onclick: "window.location.reload();",
+  }).appendTo(".game-over-menu");
 }
 
 function useItem(item) {

@@ -44,6 +44,17 @@ function enemyAction(enemyId) {
   if (enemy.hp <= 0) {
     console.log("enemy died");
   }
+  // если игрок в радиусе атаки, атакуем
+  if (
+    Math.abs(enemy.y - playerCoord[0]) <= enemy["weaponrange"] &&
+    Math.abs(enemy.x - playerCoord[1]) <= enemy["weaponrange"]
+  ) {
+    playerParameters.getDamage(enemy.damage)
+
+    setTimeout(() => {
+      enemyAction(enemyId);
+    }, 1000);
+  }
   // если игрок в области зрения выполняется эта функция, враг идет к нему
   else if (isPlayerDeted(enemy)) {
     moveEnemy(enemy, BresenhamAlgoritm([enemy.y, enemy.x], playerCoord));
