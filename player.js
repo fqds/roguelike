@@ -8,6 +8,11 @@ function spawnPlayer() {
   }
   playerParameters["getDamage"] = function (damage) {
     this.hp -= damage;
+    $(".tileP")
+      .children(":first")
+      .css({
+        width: (playerParameters.hp / playerParameters.maxhp) * 100 + "%",
+      });
     console.log(playerParameters.hp);
     if (this.hp <= 0) {
       gameOver();
@@ -19,6 +24,9 @@ function spawnPlayer() {
     .children()
     .eq(playerCoord[1])
     .addClass("tileP");
+  $("<div>", { class: "health" })
+    .css({ width: (playerParameters.hp / playerParameters.maxhp) * 100 + "%" })
+    .appendTo(".tileP");
   // направление движения x, y и переменная, показывающая состояние кнопки
   let keys = {
     KeyW: [-1, 0, false],
@@ -45,6 +53,7 @@ function spawnPlayer() {
           ]
         ]
       ) {
+        $(".tileP").children().remove();
         movePlayer(playerCoord, keys[e.code]);
         // если в клетке игрока есть предмет, используем его
         if (settings.objectParameters[map[playerCoord[0]][playerCoord[1]]]) {
@@ -58,6 +67,11 @@ function spawnPlayer() {
             map[playerCoord[0]][playerCoord[1]]
           );
         }
+        $("<div>", { class: "health" })
+          .css({
+            width: (playerParameters.hp / playerParameters.maxhp) * 100 + "%",
+          })
+          .appendTo(".tileP");
       }
     }
   };
@@ -73,7 +87,6 @@ function spawnPlayer() {
 function movePlayer(playerCoord, direction) {
   playerCoord[0] = playerCoord[0] + direction[0];
   playerCoord[1] = playerCoord[1] + direction[1];
-
   // двигаем модельку игрока
   $(".tileP").removeClass("tileP");
   $(".field")
@@ -113,7 +126,7 @@ function gameOver() {
   playerCoord[0] = -200;
   playerCoord[1] = -200;
   $(".tileP").removeClass("tileP");
-  $("<div>", { class: "game-over-menu" }).appendTo("body");
+  $("<div>", { class: "game-over-menu" }).appendTo(".field");
   $("<div>", {
     class: "game-over-menu-content",
     text: "RESTART",

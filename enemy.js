@@ -24,6 +24,7 @@ function spawnEnemy(enemyParameters) {
   enemyArray[enemyId]["x"] = enemyCoord[1];
   enemyArray[enemyId]["getDamage"] = function (damage) {
     this.hp -= damage;
+    $(".field").children().eq(this.y).children().eq(this.x).children(":first").css({ width: (this.hp / this.maxhp) * 100 + "%" })
     if (this.hp <= 0) {
       clearTile(this.y, this.x, this.name);
       this.y = -100;
@@ -33,6 +34,9 @@ function spawnEnemy(enemyParameters) {
   for (var key in enemyParameters) {
     enemyArray[enemyId][key] = enemyParameters[key];
   }
+  $("<div>", { class: "health" })
+    .css({ width: (enemyArray[enemyId].hp / enemyArray[enemyId].maxhp) * 100 + "%" })
+    .appendTo($(".field").children().eq(enemyArray[enemyId].y).children().eq(enemyArray[enemyId].x));
   setTimeout(() => {
     enemyAction(enemyId);
   }, 1000);
@@ -45,11 +49,11 @@ function enemyAction(enemyId) {
     console.log("enemy died");
   }
   // если игрок в радиусе атаки, атакуем
-  if (
+  else if (
     Math.abs(enemy.y - playerCoord[0]) <= enemy["weaponrange"] &&
     Math.abs(enemy.x - playerCoord[1]) <= enemy["weaponrange"]
   ) {
-    playerParameters.getDamage(enemy.damage)
+    playerParameters.getDamage(enemy.damage);
 
     setTimeout(() => {
       enemyAction(enemyId);
@@ -94,10 +98,14 @@ function enemyAction(enemyId) {
 }
 
 function moveEnemy(enemy, coords) {
+  $(".field").children().eq(enemy.y).children().eq(enemy.x).children().remove()
   clearTile(enemy.y, enemy.x, enemy.name);
   enemy.y = coords[0];
   enemy.x = coords[1];
   drawTile(enemy.y, enemy.x, enemy.name);
+  $("<div>", { class: "health" })
+    .css({ width: (enemy.hp / enemy.maxhp) * 100 + "%" })
+    .appendTo($(".field").children().eq(enemy.y).children().eq(enemy.x));
 }
 
 function isPlayerDeted(enemy) {

@@ -8,7 +8,7 @@ const settings = {
   roomWidthMin: 3,
   roomWidthMax: 8,
   roomHeightMin: 3,
-  roomHeightMax: 8,
+  roomHeightMax: 8, 
   objects: [
     ["tileSW", 2],
     ["tileHP", 10],
